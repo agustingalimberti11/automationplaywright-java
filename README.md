@@ -2,16 +2,16 @@
 
 Proyecto de aprendizaje para automatizar [DemoGuru New Tours](https://demo.guru99.com/test/newtours/) con Playwright y BDD.
 
-Cucumber escribe el **que** (escenarios en espanol). Los Page Objects + Playwright hacen el **como**.
+Cucumber describe **qué** validar (escenarios en español). Los Page Objects y Playwright hacen **cómo** se hace en el browser.
 
-No usa composicion de paginas. Usa **herencia**: todas las pantallas extienden `BasePage`.
+Las pantallas usan **herencia** (`HomePage` extiende `BasePage`). No hay composición de componentes.
 
-## Que necesitas
+## Qué necesitas
 
-- Java 17 o mas
+- Java 17 o más
 - Maven 3.9+
 
-## Como correrlo
+## Cómo correrlo
 
 En PowerShell (Windows), la primera vez:
 
@@ -19,7 +19,7 @@ En PowerShell (Windows), la primera vez:
 mvn exec:java "-Dexec.args=install chromium"
 ```
 
-Correr todos los escenarios:
+Todos los escenarios:
 
 ```powershell
 mvn test
@@ -31,61 +31,189 @@ Ver el browser:
 mvn test -Dheadless=false
 ```
 
-Solo smoke:
+Solo smoke (casos cortos / críticos):
 
 ```powershell
 mvn test "-Dcucumber.filter.tags=@smoke"
 ```
 
-Solo regresion:
+Solo regresion (el resto de la suite):
 
 ```powershell
 mvn test "-Dcucumber.filter.tags=@regresion"
 ```
 
-Reporte Allure (despues de `mvn test`):
+Reporte Allure (después de `mvn test`):
 
 ```powershell
 mvn allure:serve
 ```
 
-## Como esta armado
+Usuario de demo de New Tours: `mercury` / `mercury`. Está en `BrowserManager`.
 
+---
+
+## Arquitectura
+
+Cuando corrés `mvn test`, Maven no abre el browser directo. Pasa por estas capas:
+
+```text
+mvn test
+    → pom.xml (Surefire) corre RunCucumberTest
+        → Cucumber lee los .feature
+            → Hooks abre Playwright / Browser / Page
+                → Steps interpretan cada frase del .feature
+                    → Page Objects hablan con la pantalla
+                        → Playwright mueve el browser
 ```
-src/test/resources/features/     -> escenarios Gherkin (el negocio)
-src/test/java/com/demo/newtours/
-  runners/RunCucumberTest.java   -> Maven entra por aca
-  hooks/                         -> abre/cierra el browser
-  steps/                         -> cada frase del .feature
-  pages/                         -> una clase por pantalla
+
+Cada capa tiene un trabajo solo:
+
+| Capa | Pregunta que responde | Dónde está |
+|---|---|---|
+| Feature | ¿Qué tiene que pasar en negocio? | `src/test/resources/features/` |
+| Runner | ¿Por dónde entra Maven a Cucumber? | `runners/RunCucumberTest.java` |
+| Hooks | ¿Cuándo se abre y cierra el browser? | `hooks/` |
+| Steps | ¿Qué Java ejecuta cada frase? | `steps/` |
+| Pages | ¿Cómo se hace clic/fill en ESA pantalla? | `pages/` |
+| Playwright | ¿Cómo se controla Chromium? | librería, no código nuestro |
+
+Un escenario de login, de punta a punta:
+
+1. `login.feature` dice: *Cuando inicia sesion con el usuario de demo*.
+2. `LoginSteps` recibe esa frase y llama a `home.iniciarSesion(...)`.
+3. `HomePage` hace `fill` en usuario/password y `click` en Submit.
+4. Playwright espera solo a que el elemento esté listo (no hay `Thread.sleep`).
+5. El `Entonces` afirma el texto *Login Successfully*.
+
+Si un escenario falla, `Hooks` saca una captura (Allure + `target/screenshots`).
+
+Playwright no es thread-safe. Por eso `BrowserManager` guarda **un browser por hilo**, y cada escenario recibe un `BrowserContext` y una `Page` nuevos (sesión limpia: sin cookies del escenario anterior).
+
+---
+
+## Mapa de carpetas
+
+```text
+automationplaywright/
+├── pom.xml                              Maven: librerías y cómo se corren los tests
+├── Jenkinsfile                          Pipeline de CI
+├── .gitignore                           Qué no se sube a Git
+├── README.md
+└── src/test/
+    ├── resources/
+    │   ├── features/                    Escenarios Gherkin
+    │   │   ├── login.feature
+    │   │   ├── registro.feature
+    │   │   ├── navegacion.feature
+    │   │   └── vuelos.feature
+    │   ├── junit-platform.properties    Cómo corre Cucumber (glue, paralelo, Allure)
+    │   └── allure.properties            Dónde guarda Allure los JSON
+    └── java/com/demo/newtours/
+        ├── runners/RunCucumberTest.java Punto de entrada de Maven
+        ├── hooks/
+        │   ├── Hooks.java               @Before / @After de cada escenario
+        │   ├── BrowserManager.java      Arranque del browser + URL/usuario
+        │   └── ScenarioState.java       Comparte la Page entre steps
+        ├── steps/                       Una clase por área funcional
+        └── pages/
+            ├── BasePage.java            Menú común (padre)
+            ├── HomePage.java
+            ├── RegisterPage.java
+            └── FlightFinderPage.java
 ```
 
-Flujo:
+### Java (qué hace cada clase)
 
-1. El **.feature** dice QUE validar, en espanol.
-2. El **step** conecta la frase con Java.
-3. El **Page Object** habla con la UI.
-4. Playwright habla con el browser.
+- **`RunCucumberTest`**: clase vacía con anotaciones. Le dice a JUnit: usá el motor Cucumber, leé `features/` y buscá steps en `com.demo.newtours`.
+- **`Hooks`**: antes de cada escenario abre una pestaña; después la cierra. Si falló, adjunta screenshot.
+- **`BrowserManager`**: crea Playwright y Chromium. Acá están URL, browser, timeout, usuario demo y headless.
+- **`ScenarioState`**: PicoContainer inyecta la misma instancia en Hooks y Steps, para no usar variables `static` con la `Page`.
+- **`BasePage`**: `abrir(ruta)`, menú (REGISTER, Flights, etc.) y cierre del banner de cookies si aparece.
+- **`HomePage` / `RegisterPage` / `FlightFinderPage`**: locators y acciones de esa pantalla. El test no habla con el DOM.
 
-## Ideas que este proyecto te muestra
+### Features y tags
 
-| Idea | Donde verla |
+Solo hay dos tags:
+
+- `@smoke`: home, login válido, registro, menú REGISTER
+- `@regresion`: login inválido, Flights, SUPPORT, búsqueda de vuelo
+
+Los datos del registro y del vuelo van **en el `.feature`** (tablas), no en una clase Java de datos.
+
+---
+
+## Archivos de configuración
+
+### `pom.xml`
+
+Es el corazón de Maven. Sin este archivo `mvn test` no existe.
+
+- **`properties`**: versiones (Java 17, Playwright, Cucumber, Allure).
+- **`dependencyManagement`**: BOM de Allure y Cucumber para que todos los módulos usen la misma versión.
+- **Dependencias de test**:
+  - `playwright`: el browser
+  - `cucumber-java`: `@Dado` / `@Cuando` / `@Entonces`
+  - `cucumber-junit-platform-engine`: Cucumber corre dentro de JUnit 5
+  - `cucumber-picocontainer`: inyecta `ScenarioState` en steps y hooks
+  - `junit-platform-suite`: permite la clase `RunCucumberTest`
+  - `allure-cucumber7-jvm`: cada escenario aparece en Allure
+  - `aspectjrt`: hace que `@Step` de Allure en los Page Objects se grabe
+- **`maven-compiler-plugin`**: compila con Java 17.
+- **`maven-surefire-plugin`**: ejecuta tests. Solo incluye `RunCucumberTest` (así no se duplican escenarios). El `argLine` de AspectJ es para Allure. `allure.results.directory` apunta a `target/allure-results`.
+- **`allure-maven`**: `mvn allure:serve` arma el HTML del reporte.
+- **`exec-maven-plugin`**: `mvn exec:java "-Dexec.args=install chromium"` descarga el browser de Playwright.
+
+### `src/test/resources/junit-platform.properties`
+
+Cucumber / JUnit leen este archivo al arrancar.
+
+| Clave | Para qué |
 |---|---|
-| Escenario BDD | `features/login.feature` |
-| Glue / steps | `steps/LoginSteps.java` |
-| Playwright / Browser / Page | `hooks/BrowserManager.java` |
-| Un context nuevo por escenario | `hooks/Hooks.java` |
-| Locator + fill/click | `HomePage` |
-| select y radio | `FlightFinderPage` |
-| Allure | `mvn allure:serve` |
+| `cucumber.glue` | Paquete donde están steps y hooks (`com.demo.newtours`) |
+| `cucumber.plugin` | `pretty` y `summary` en consola; Allure genera el reporte |
+| `cucumber.publish.quiet` | No molesta con el banner de Cucumber Reports |
+| `cucumber.execution.parallel.enabled` | Escenarios en paralelo (2 hilos) |
+| `cucumber.execution.parallel.config.fixed.parallelism` | Cuántos hilos |
+| `cucumber.junit-platform.naming-strategy=long` | Nombres claros en Surefire / Jenkins |
 
-## Jenkins
+Filtrar por tag **no** va acá: se pasa en la consola (`-Dcucumber.filter.tags=@smoke`).
 
-1. Instala el plugin **Allure Report**.
-2. Configura JDK 17 y Maven como tools (`jdk17`, `maven3`) o cambia los nombres en `Jenkinsfile`.
-3. Crea un Pipeline job apuntando a este `Jenkinsfile`.
+### `src/test/resources/allure.properties`
 
-## Usuario de demo
+Una sola línea: `allure.results.directory=target/allure-results`.
 
-New Tours tiene un usuario publico: `mercury` / `mercury`.
-Está en `BrowserManager` (`DEMO_USER` / `DEMO_PASSWORD`), junto con la URL y el browser.
+Ahí Cucumber deja JSON crudo. `mvn allure:serve` o Jenkins los convierten en HTML. Esa carpeta no se commitea.
+
+### `.gitignore`
+
+Lista lo que Git no debe subir:
+
+- `target/` (compilado y reportes)
+- `.idea/`, `*.iml` (IntelliJ)
+- `.allure/`, `allure-results/` (cache y resultados de Allure)
+- logs y basura de SO
+
+### `Jenkinsfile`
+
+Pipeline de Jenkins, no de Maven. En cada build:
+
+1. Instala Chromium con la CLI de Playwright.
+2. Corre `mvn clean test -Dheadless=true`.
+3. **Siempre** (pase o falle): publica Allure desde `target/allure-results` y archiva screenshots.
+
+Las tools `jdk17` y `maven3` tienen que existir en Jenkins con esos nombres, o hay que cambiarlas en este archivo.
+
+### Constantes en `BrowserManager.java`
+
+No hay `config.properties`. La config de entorno está en esa clase:
+
+| Constante | Significado |
+|---|---|
+| `BASE_URL` | Home de New Tours |
+| `BROWSER` | `chromium` (también podría ser `firefox` o `webkit`) |
+| `TIMEOUT_MS` | Espera máxima de Playwright y de `assertThat` |
+| `DEMO_USER` / `DEMO_PASSWORD` | Login válido de la demo |
+| `headless()` | Por defecto `true`. Con `-Dheadless=false` ves el browser |
+
+Si cambia la URL o el usuario de demo, se edita solo ese archivo.
