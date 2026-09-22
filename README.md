@@ -106,7 +106,8 @@ automationplaywright/
     │   │   ├── login.feature
     │   │   ├── registro.feature
     │   │   ├── navegacion.feature
-    │   │   └── vuelos.feature
+    │   │   ├── vuelos.feature
+    │   │   └── api/                     API (vacío por ahora)
     │   ├── junit-platform.properties    Cómo corre Cucumber (glue, paralelo, Allure)
     │   └── allure.properties            Dónde guarda Allure los JSON
     └── java/com/demo/newtours/
@@ -116,6 +117,7 @@ automationplaywright/
         │   ├── BrowserManager.java      Arranque del browser + URL/usuario
         │   └── ScenarioState.java       Comparte la Page entre steps
         ├── steps/                       Una clase por área funcional
+        ├── api/                         Clientes HTTP (equivale a pages/, vacío)
         └── pages/
             ├── BasePage.java            Menú común (padre)
             ├── HomePage.java
