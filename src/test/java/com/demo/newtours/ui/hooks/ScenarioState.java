@@ -1,8 +1,8 @@
-package com.demo.newtours.hooks;
+package com.demo.newtours.ui.hooks;
 
-import com.demo.newtours.pages.FlightFinderPage;
-import com.demo.newtours.pages.HomePage;
-import com.demo.newtours.pages.RegisterPage;
+import com.demo.newtours.ui.pages.FlightFinderPage;
+import com.demo.newtours.ui.pages.HomePage;
+import com.demo.newtours.ui.pages.RegisterPage;
 import com.microsoft.playwright.Page;
 
 /**

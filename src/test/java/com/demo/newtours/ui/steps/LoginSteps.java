@@ -1,7 +1,7 @@
-package com.demo.newtours.steps;
+package com.demo.newtours.ui.steps;
 
-import com.demo.newtours.hooks.BrowserManager;
-import com.demo.newtours.hooks.ScenarioState;
+import com.demo.newtours.ui.hooks.BrowserManager;
+import com.demo.newtours.ui.hooks.ScenarioState;
 import io.cucumber.java.es.Cuando;
 import io.cucumber.java.es.Entonces;
 

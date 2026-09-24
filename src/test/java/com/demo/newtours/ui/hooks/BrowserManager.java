@@ -1,4 +1,4 @@
-package com.demo.newtours.hooks;
+package com.demo.newtours.ui.hooks;
 
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;

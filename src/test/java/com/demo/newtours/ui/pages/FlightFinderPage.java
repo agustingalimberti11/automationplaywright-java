@@ -1,4 +1,4 @@
-package com.demo.newtours.pages;
+package com.demo.newtours.ui.pages;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;

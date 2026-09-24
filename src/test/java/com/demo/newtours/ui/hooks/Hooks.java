@@ -1,4 +1,4 @@
-package com.demo.newtours.hooks;
+package com.demo.newtours.ui.hooks;
 
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.assertions.PlaywrightAssertions;

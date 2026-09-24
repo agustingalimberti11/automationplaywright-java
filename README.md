@@ -71,11 +71,11 @@ Cada capa tiene un trabajo solo:
 
 | Capa | Pregunta que responde | Dónde está |
 |---|---|---|
-| Feature | ¿Qué tiene que pasar en negocio? | `src/test/resources/features/` |
+| Feature | ¿Qué tiene que pasar en negocio? | `features/ui/` (pantalla) y `features/api/` (HTTP) |
 | Runner | ¿Por dónde entra Maven a Cucumber? | `runners/RunCucumberTest.java` |
-| Hooks | ¿Cuándo se abre y cierra el browser? | `hooks/` |
-| Steps | ¿Qué Java ejecuta cada frase? | `steps/` |
-| Pages | ¿Cómo se hace clic/fill en ESA pantalla? | `pages/` |
+| Hooks | ¿Cuándo se abre y cierra el browser? | `ui/hooks/` |
+| Steps | ¿Qué Java ejecuta cada frase? | `ui/steps/` |
+| Pages | ¿Cómo se hace clic/fill en ESA pantalla? | `ui/pages/` |
 | Playwright | ¿Cómo se controla Chromium? | librería, no código nuestro |
 
 Un escenario de login, de punta a punta:
@@ -102,27 +102,29 @@ automationplaywright/
 ├── README.md
 └── src/test/
     ├── resources/
-    │   ├── features/                    Escenarios Gherkin
-    │   │   ├── login.feature
-    │   │   ├── registro.feature
-    │   │   ├── navegacion.feature
-    │   │   ├── vuelos.feature
-    │   │   └── api/                     API (vacío por ahora)
+    │   ├── features/
+    │   │   ├── ui/                      Escenarios de pantalla
+    │   │   │   ├── login.feature
+    │   │   │   ├── registro.feature
+    │   │   │   ├── navegacion.feature
+    │   │   │   └── vuelos.feature
+    │   │   └── api/                     Escenarios de API (vacío por ahora)
     │   ├── junit-platform.properties    Cómo corre Cucumber (glue, paralelo, Allure)
     │   └── allure.properties            Dónde guarda Allure los JSON
     └── java/com/demo/newtours/
         ├── runners/RunCucumberTest.java Punto de entrada de Maven
-        ├── hooks/
-        │   ├── Hooks.java               @Before / @After de cada escenario
-        │   ├── BrowserManager.java      Arranque del browser + URL/usuario
-        │   └── ScenarioState.java       Comparte la Page entre steps
-        ├── steps/                       Una clase por área funcional
-        ├── api/                         Clientes HTTP (equivale a pages/, vacío)
-        └── pages/
-            ├── BasePage.java            Menú común (padre)
-            ├── HomePage.java
-            ├── RegisterPage.java
-            └── FlightFinderPage.java
+        ├── ui/                          Todo lo de pantalla
+        │   ├── hooks/
+        │   │   ├── Hooks.java           @Before / @After de cada escenario
+        │   │   ├── BrowserManager.java  Arranque del browser + URL/usuario
+        │   │   └── ScenarioState.java   Comparte la Page entre steps
+        │   ├── steps/                   Una clase por área funcional
+        │   └── pages/
+        │       ├── BasePage.java        Menú común (padre)
+        │       ├── HomePage.java
+        │       ├── RegisterPage.java
+        │       └── FlightFinderPage.java
+        └── api/                         Clientes HTTP (vacío por ahora)
 ```
 
 ### Java (qué hace cada clase)

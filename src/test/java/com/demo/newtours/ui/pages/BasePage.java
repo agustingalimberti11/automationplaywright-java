@@ -1,6 +1,6 @@
-package com.demo.newtours.pages;
+package com.demo.newtours.ui.pages;
 
-import com.demo.newtours.hooks.BrowserManager;
+import com.demo.newtours.ui.hooks.BrowserManager;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;

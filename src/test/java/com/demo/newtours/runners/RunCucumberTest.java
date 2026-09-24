@@ -11,8 +11,8 @@ import static io.cucumber.junit.platform.engine.Constants.PLUGIN_PROPERTY_NAME;
 /**
  * Punto de entrada: Maven corre ESTA clase, y ella dispara Cucumber.
  *
- * glue = donde estan los steps y los hooks.
- * features = src/test/resources/features
+ * glue = donde estan los steps y los hooks (ui/ y api/).
+ * features = src/test/resources/features (ui/ y api/)
  */
 @Suite
 @IncludeEngines("cucumber")
