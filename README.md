@@ -8,51 +8,55 @@ Las pantallas usan **herencia** (`HomePage` extiende `BasePage`). No hay composi
 
 ## Qué necesitas
 
-- Java 17 o más
-- Maven 3.9+
+- **Java 17 o más** (`java -version`). Esto sí o sí.
+- **Maven no hace falta instalarlo.** El repo trae `mvnw.cmd` (Windows) y `mvnw` (Linux/Mac): la primera vez se baja Maven solo.
+
+Si en la PC del laburo no tenés `mvn` en el PATH, usá siempre `.\mvnw.cmd` en vez de `mvn`. Hace lo mismo.
+
+La primera corrida necesita internet (Maven, librerías y Chromium). Si el firewall del laburo bloquea `repo.maven.apache.org` o `cdn.playwright.dev`, no va a poder bajar nada.
 
 ## Cómo correrlo
 
-En PowerShell (Windows), la primera vez:
+En PowerShell, desde la carpeta del proyecto. Primera vez (descarga Chromium):
 
 ```powershell
-mvn exec:java "-Dexec.args=install chromium"
+.\mvnw.cmd exec:java "-Dexec.args=install chromium"
 ```
 
 Todos los escenarios:
 
 ```powershell
-mvn test
+.\mvnw.cmd test
 ```
 
 Sin headless (se abre Chromium y ves cada paso):
 
 ```powershell
-mvn test -Dheadless=false
+.\mvnw.cmd test -Dheadless=false
 ```
 
-Por defecto `mvn test` corre headless (sin ventana). `-Dheadless=false` lo apaga. Se puede combinar con tags:
+Por defecto `.\mvnw.cmd test` corre headless (sin ventana). `-Dheadless=false` lo apaga. Se puede combinar con tags:
 
 ```powershell
-mvn test -Dheadless=false "-Dcucumber.filter.tags=@smoke"
+.\mvnw.cmd test -Dheadless=false "-Dcucumber.filter.tags=@smoke"
 ```
 
 Solo smoke (casos cortos / críticos):
 
 ```powershell
-mvn test "-Dcucumber.filter.tags=@smoke"
+.\mvnw.cmd test "-Dcucumber.filter.tags=@smoke"
 ```
 
 Solo regresion (el resto de la suite):
 
 ```powershell
-mvn test "-Dcucumber.filter.tags=@regresion"
+.\mvnw.cmd test "-Dcucumber.filter.tags=@regresion"
 ```
 
-Reporte Allure (después de `mvn test`):
+Reporte Allure (después de `.\mvnw.cmd test`):
 
 ```powershell
-mvn allure:serve
+.\mvnw.cmd allure:serve
 ```
 
 Usuario de demo de New Tours: `mercury` / `mercury`. Está en `BrowserManager`.
@@ -103,6 +107,8 @@ Playwright no es thread-safe. Por eso `BrowserManager` guarda **un browser por h
 ```text
 automationplaywright/
 ├── pom.xml                              Maven: librerías y cómo se corren los tests
+├── mvnw.cmd / mvnw                      Wrapper: corre Maven sin instalarlo
+├── .mvn/wrapper/                        Qué versión de Maven baja el wrapper
 ├── Jenkinsfile                          Pipeline de CI
 ├── .gitignore                           Qué no se sube a Git
 ├── README.md
@@ -157,9 +163,9 @@ Los datos del registro y del vuelo van **en el `.feature`** (tablas), no en una 
 
 ### `pom.xml`
 
-Es el corazón de Maven. Sin este archivo `mvn test` no existe.
+Es el corazón de Maven. Sin este archivo `.\mvnw.cmd test` (o `mvn test`) no existe.
 
-- **`properties`**: versiones (Java 17, Playwright, Cucumber, Allure).
+- **`properties`**: versiones (Java 17, Playwright, Cucumber, Allure, Maven Wrapper 3.9.9).
 - **`dependencyManagement`**: BOM de Allure y Cucumber para que todos los módulos usen la misma versión.
 - **Dependencias de test**:
   - `playwright`: el browser
@@ -171,8 +177,9 @@ Es el corazón de Maven. Sin este archivo `mvn test` no existe.
   - `aspectjrt`: hace que `@Step` de Allure en los Page Objects se grabe
 - **`maven-compiler-plugin`**: compila con Java 17.
 - **`maven-surefire-plugin`**: ejecuta tests. Solo incluye `RunCucumberTest` (así no se duplican escenarios). El `argLine` de AspectJ es para Allure. `allure.results.directory` apunta a `target/allure-results`.
-- **`allure-maven`**: `mvn allure:serve` arma el HTML del reporte.
-- **`exec-maven-plugin`**: `mvn exec:java "-Dexec.args=install chromium"` descarga el browser de Playwright.
+- **`allure-maven`**: `.\mvnw.cmd allure:serve` arma el HTML del reporte.
+- **`exec-maven-plugin`**: `.\mvnw.cmd exec:java "-Dexec.args=install chromium"` descarga el browser de Playwright.
+- **`maven-wrapper-plugin`**: deja `mvnw.cmd` en el repo. En una PC sin Maven instalado, ese script baja Maven 3.9.9 solo. La versión está en `properties` (`maven.version`).
 
 ### `src/test/resources/junit-platform.properties`
 

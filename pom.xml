@@ -19,6 +19,8 @@
         <cucumber.version>7.20.1</cucumber.version>
         <allure.version>2.29.1</allure.version>
         <aspectj.version>1.9.22</aspectj.version>
+        <maven.version>3.9.9</maven.version>
+        <maven-wrapper-plugin.version>3.3.4</maven-wrapper-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -125,6 +127,16 @@
                 <configuration>
                     <resultsDirectory>${project.build.directory}/allure-results</resultsDirectory>
                     <reportDirectory>${project.build.directory}/site/allure-maven-plugin</reportDirectory>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-wrapper-plugin</artifactId>
+                <version>${maven-wrapper-plugin.version}</version>
+                <configuration>
+                    <mavenVersion>${maven.version}</mavenVersion>
+                    <distributionType>only-script</distributionType>
                 </configuration>
             </plugin>
 
