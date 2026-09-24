@@ -25,10 +25,16 @@ Todos los escenarios:
 mvn test
 ```
 
-Ver el browser:
+Sin headless (se abre Chromium y ves cada paso):
 
 ```powershell
 mvn test -Dheadless=false
+```
+
+Por defecto `mvn test` corre headless (sin ventana). `-Dheadless=false` lo apaga. Se puede combinar con tags:
+
+```powershell
+mvn test -Dheadless=false "-Dcucumber.filter.tags=@smoke"
 ```
 
 Solo smoke (casos cortos / críticos):
